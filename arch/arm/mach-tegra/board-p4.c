@@ -1178,6 +1178,7 @@ static struct platform_device tegra_camera = {
 	.id = -1,
 };
 
+#if !defined(CONFIG_MACH_SAMSUNG_P3_P7100)
 static void tegra_usb_ldo_en(int active, int instance)
 {
 	struct regulator *reg = regulator_get(NULL, "vdd_ldo6");
@@ -1215,6 +1216,7 @@ static void tegra_usb_ldo_en(int active, int instance)
 
 	mutex_unlock(&usb_data.ldo_en_lock);
 }
+#endif
 
 static void tegra_otg_en(int active)
 {
@@ -1639,7 +1641,9 @@ static struct platform_device sec_device_jack = {
 struct acc_con_platform_data acc_con_pdata = {
 	.otg_en = tegra_otg_en,
 	.acc_power = tegra_acc_power,
+#if !defined(CONFIG_MACH_SAMSUNG_P3_P7100)
 	.usb_ldo_en = tegra_usb_ldo_en,
+#endif
 	.accessory_irq_gpio = GPIO_ACCESSORY_INT,
 	.dock_irq_gpio = GPIO_DOCK_INT,
 	.mhl_irq_gpio = GPIO_MHL_INT,
@@ -2393,9 +2397,14 @@ static int __init p3_touch_init(void)
 static struct usb_phy_plat_data tegra_usb_phy_pdata[] = {
 	[0] = {
 			.instance = 0,
+#if !defined(CONFIG_MACH_SAMSUNG_P3_P7100)
 //			.vbus_irq = TPS6586X_INT_BASE + TPS6586X_INT_USB_DET,
 			.vbus_gpio = -1,
 			.usb_ldo_en = tegra_usb_ldo_en,
+#else
+			.vbus_irq = TPS6586X_INT_BASE + TPS6586X_INT_USB_DET,
+			.vbus_gpio = TEGRA_GPIO_PD0,
+#endif
 	},
 	[1] = {
 			.instance = 1,
@@ -2403,14 +2412,19 @@ static struct usb_phy_plat_data tegra_usb_phy_pdata[] = {
 	},
 	[2] = {
 			.instance = 2,
+#if !defined(CONFIG_MACH_SAMSUNG_P3_P7100)
 			.vbus_gpio = -1,
 			.usb_ldo_en = tegra_usb_ldo_en,
+#else
+			.vbus_gpio = TEGRA_GPIO_PD3,
+#endif
 	},
 };
 
 static struct tegra_ehci_platform_data tegra_ehci_pdata[] = {
 	[0] = {
 		.phy_config = &utmi_phy_config[0],
+#if !defined(CONFIG_MACH_SAMSUNG_P3_P7100)
 		.operating_mode = TEGRA_USB_OTG,
 		.power_down_on_bus_suspend = 0,
 		.host_notify = 1,
@@ -2418,11 +2432,19 @@ static struct tegra_ehci_platform_data tegra_ehci_pdata[] = {
 /* Don't merge with P3
 		.currentlimit_irq = TEGRA_GPIO_TO_IRQ(GPIO_V_ACCESSORY_5V),
 */
+#else
+		.operating_mode = TEGRA_USB_HOST,
+		.power_down_on_bus_suspend = 1,
+#endif
 	},
 	[1] = {
 		.phy_config = &hsic_phy_config,
 		.operating_mode = TEGRA_USB_HOST,
+#if !defined(CONFIG_MACH_SAMSUNG_P3_P7100)
 		.power_down_on_bus_suspend = 1,
+#else
+		.power_down_on_bus_suspend = 0,
+#endif
 	},
 	[2] = {
 		.phy_config = &utmi_phy_config[1],
